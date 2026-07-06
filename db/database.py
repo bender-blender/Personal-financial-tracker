@@ -28,7 +28,7 @@ class DataBase:
         
         self.cursor.execute(
         """
-        INSERT INTO transactions (name, value, type)
+        INSERT INTO transactions (name, value, type, time)
         VALUES (?, ?, ?, ?)
         """,(name,value,type_transaction,time))
         self.bd.commit()
