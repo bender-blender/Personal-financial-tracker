@@ -10,6 +10,7 @@ from keyboards.key_sections import (
     settings_keyboard, currency_keyboard, notifications_keyboard,
 )
 from keyboards.main_menu import main_menu_keyboard
+from DB.db_transactions import get_stats
 
 router = Router()
 
@@ -18,18 +19,34 @@ router = Router()
 # 📊 СТАТИСТИКА
 # ================================================================
 
+def _format_stats(stats: dict, period_label: str) -> str:
+    """Формирует текст сообщения со статистикой."""
+    cur = stats["currency"]
+ 
+    # Блок с топ-категориями расходов
+    top_expenses = [c for c in stats["by_category"] if c["type"] == "expense"][:5]
+    categories_text = ""
+    if top_expenses:
+        categories_text = "\n📂 *Расходы по категориям:*\n"
+        for cat in top_expenses:
+            categories_text += f"  {cat['name']}: {cat['total']:.2f} {cur}\n"
+ 
+    balance_emoji = "📈" if stats["balance"] >= 0 else "📉"
+ 
+    return (
+        f"📊 *Статистика — {period_label}*\n\n"
+        f"💚 Доходы:  *{stats['income']:.2f} {cur}*\n"
+        f"❤️ Расходы: *{stats['expense']:.2f} {cur}*\n"
+        f"{balance_emoji} Баланс:  *{stats['balance']:.2f} {cur}*"
+        + categories_text
+    )
+
 @router.message(F.text == "📊 Статистика")
 async def btn_stats(message: Message) -> None:
-    # TODO: Python-разработчик — подставить реальные данные из БД
-    # данные ниже — заглушка для демонстрации визуала
 
-    text = (
-        "📊 *Статистика за этот месяц*\n\n"
-        "💚 Доходы:  *0.00*\n"
-        "❤️ Расходы: *0.00*\n"
-        "💰 Баланс:  *0.00*\n\n"
-        "Выбери период или тип графика:"
-    )
+
+    stats = get_stats(message.from_user.id, period="month")
+    text = _format_stats(stats, "этот месяц")
     await message.answer(text, parse_mode="Markdown", reply_markup=stats_period_keyboard())
 
 
@@ -45,14 +62,17 @@ async def stats_callback(callback: CallbackQuery) -> None:
         "dynamics":    "динамику",
     }
 
-    # TODO: Python-разработчик — получить данные за period и сформировать текст/график
-    await callback.answer(f"Загружаю данные за {labels.get(period, period)}...")
-    await callback.message.edit_text(
-        f"📊 *Статистика — {labels.get(period, period)}*\n\n"
-        f"_Данные появятся когда Python-разработчик подключит БД_",
-        parse_mode="Markdown",
-        reply_markup=stats_period_keyboard(),
-    )
+    if period in period_map:
+        db_period, label = period_map[period]
+        stats = get_stats(callback.from_user.id, period=db_period)
+        text = _format_stats(stats, label)
+        await callback.message.edit_text(
+            text,
+            parse_mode="Markdown",
+            reply_markup=stats_period_keyboard(),
+        )
+    else:
+        await callback.answer("Скоро будет!")
 
 
 # ================================================================
@@ -80,7 +100,7 @@ async def btn_budget(message: Message) -> None:
     #     {"name": "🚗 Транспорт", "current": 1800, "limit": 2000},
     # ]
 
-    budgets = []  # TODO: заполнить из БД
+    budgets = []
 
     if not budgets:
         text = (
@@ -121,9 +141,7 @@ async def budget_month(callback: CallbackQuery) -> None:
 
 @router.message(F.text == "👨‍👩‍👧 Семья")
 async def btn_family(message: Message) -> None:
-    # TODO: Python-разработчик — проверить через get_user_household(user_id)
-    # есть ли у пользователя группа, и в зависимости от этого показать нужное меню
-    in_group = False  # TODO: заменить реальной проверкой
+    in_group = False
 
     if not in_group:
         await message.answer(

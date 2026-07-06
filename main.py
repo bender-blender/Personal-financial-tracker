@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from DB.connection import init_db
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -12,6 +13,7 @@ from handlers import sections
 
 
 async def main() -> None:
+    init_db(config.DB_PATH)
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",

@@ -8,6 +8,7 @@ from keyboards.key_transactions import (
     note_keyboard, confirm_keyboard,
 )
 from keyboards.main_menu import main_menu_keyboard
+from DB.db_transactions import save_transaction, get_transactions
 
 router = Router()
 
@@ -143,15 +144,28 @@ async def _show_confirm(message: Message, state: FSMContext) -> None:
 async def step_confirm(callback: CallbackQuery, state: FSMContext) -> None:
     data = await state.get_data()
 
-    # TODO: Python-разработчик — вызвать здесь функцию сохранения в БД
-    # например: await save_transaction(user_id=callback.from_user.id, **data)
-
-    await state.clear()
-    await callback.message.edit_text(
-        f"✅ *Запись сохранена!*\n\n"
-        f"{TYPE_LABELS[data['type']]} на *{data['amount']:.2f}* — {CATEGORY_LABELS[data['category']]}",
-        parse_mode="Markdown",
+    success = save_transaction(
+        telegram_id=callback.from_user.id,
+        amount=data["amount"],
+        transaction_type=data["type"],
+        category_key=data["category"],
+        note=data.get("note"),
     )
+ 
+    await state.clear()
+ 
+    if success:
+        await callback.message.edit_text(
+            f"✅ *Запись сохранена!*\n\n"
+            f"{TYPE_LABELS[data['type']]} на *{data['amount']:.2f}* — "
+            f"{CATEGORY_LABELS[data['category']]}",
+            parse_mode="Markdown",
+        )
+    else:
+        await callback.message.edit_text(
+            "⚠️ Не удалось сохранить запись. Попробуй снова."
+        )
+ 
     await callback.message.answer("Что дальше?", reply_markup=main_menu_keyboard())
 
 
