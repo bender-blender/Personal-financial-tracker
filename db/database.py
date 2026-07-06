@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+
 
 
 class DataBase:
@@ -19,7 +19,7 @@ class DataBase:
         """)
         self.bd.commit()
     
-    def add_transaction(self, name:str, value:float, type_transaction="Доход", time=f"{datetime.now().strftime("%Y-%m-%d")}"):
+    def add_transaction(self, name:str, value:float, type_transaction="Доход", time=""):
         """
         Добавить транзакцию
         """
