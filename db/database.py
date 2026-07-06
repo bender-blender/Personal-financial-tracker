@@ -1,5 +1,5 @@
 import sqlite3
-
+from datetime import datetime
 
 
 class DataBase:
@@ -13,12 +13,13 @@ class DataBase:
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         value REAL,
-        type TEXT NOT NULL
+        type TEXT NOT NULL,
+        time TEXT
         )
         """)
         self.bd.commit()
     
-    def add_transaction(self, name:str, value:float, type_transaction="Доход"):
+    def add_transaction(self, name:str, value:float, type_transaction="Доход", time=f"{datetime.now().strftime("%Y-%m-%d")}"):
         """
         Добавить транзакцию
         """
@@ -28,8 +29,8 @@ class DataBase:
         self.cursor.execute(
         """
         INSERT INTO transactions (name, value, type)
-        VALUES (?, ?, ?)
-        """,(name,value,type_transaction))
+        VALUES (?, ?, ?, ?)
+        """,(name,value,type_transaction,time))
         self.bd.commit()
 
     def remove_transaction(self, value:int):
