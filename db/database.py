@@ -19,12 +19,10 @@ class DataBase:
         """)
         self.bd.commit()
     
-    def add_transaction(self, name:str, value:float, type_transaction="Доход", time=""):
+    def add_transaction(self, name:str, value:float, type_transaction:str, time:str):
         """
         Добавить транзакцию
         """
-        if type_transaction == "Расход":
-            value = -value
         
         self.cursor.execute(
         """
