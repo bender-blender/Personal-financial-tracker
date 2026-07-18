@@ -7,8 +7,8 @@ from collections import defaultdict
 
 class Tracker:
 
-    def __init__(self):
-        self.db = DataBase()
+    def __init__(self,db:DataBase):
+        self.db = db
     
 
     def __filter_pattern(self, field, operator, value):
